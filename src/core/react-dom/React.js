@@ -1,3 +1,6 @@
+import { runTask } from './WorkLoop.js'
+import { RenderNode } from './RenderNode.js'
+
 const ELEMENT_TYPE_ENUM = {
     TEXT: 'TEXT'
 }
@@ -26,27 +29,76 @@ const createElement = (type, props, ...children) => {
      }
 }
 
-const render = (vdom, container) => {
-    const { type, props } = vdom
-    // 1. create
-    const el = vdom.type === ELEMENT_TYPE_ENUM.TEXT 
+const performanceRender = (vdom, container) => {
+    const rootRenderNode = new RenderNode(vdom, container)
+    let nextNode = rootRenderNode
+    runTask(() => {
+        if(nextNode){
+            nextNode = performanceRenderUnite(nextNode)
+        }
+    })
+}
+
+function initRenderNodeEl(renderNode) {
+    if(renderNode.el){
+        return 
+     }
+    const { vdom: { type }, container } = renderNode
+    const el = type === ELEMENT_TYPE_ENUM.TEXT 
         ? document.createTextNode('')
         : document.createElement(type)
-    // 2. props
+    renderNode.el = el
+    container.append(el)
+}
+
+function processRenderNodeProp(renderNode){
+    const { vdom: { props } } = renderNode
     Object.entries(props).forEach(([key, val]) => {
         if(key === 'children'){
             return
         }
-        el[key] = val
+        renderNode.el[key] = val
     })
-    // 3. children
-    props.children.forEach(child => render(child, el))
-    // 4. mounted
-    container.append(el)
+}
+
+function initChildrenNode(renderNode){
+    const { vdom: { props } } = renderNode
+    const children = []
+    let preChildRenderNode
+    props.children.forEach(child => {
+        const newRenderNode = new RenderNode(child, renderNode.el)
+        newRenderNode.parent = renderNode
+
+        if(preChildRenderNode){
+            preChildRenderNode.sibling = newRenderNode
+        }
+        preChildRenderNode = newRenderNode
+
+        children.push(newRenderNode)
+    })
+    renderNode.children = children
+}
+
+function getNextRenderNode(renderNode){
+    return renderNode.children?.[0] ?? renderNode.sibling ?? renderNode.parent.sibling
+}
+
+const performanceRenderUnite = (renderNode) => {
+    // 1. create
+    initRenderNodeEl(renderNode)
+
+    // 2. props
+    processRenderNodeProp(renderNode)
+
+    // 3. 根据children的指针,生成渲染任务的链表结构
+    initChildrenNode(renderNode)
+
+    // 4. 返回要执行的下一个任务
+    return getNextRenderNode(renderNode)
 }
 
 const React = {
-    render,
+    render: performanceRender,
     createElement
 }
 

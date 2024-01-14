@@ -1,6 +1,5 @@
 import { expect, test, describe } from 'vitest'
 import React from '../core/react-dom/React'
-import {  } from '../core/react-dom/ReactDom'
 
 describe('render', () => {
     test('createElement', () => {
