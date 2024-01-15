@@ -29,8 +29,9 @@ const createElement = (type, props, ...children) => {
      }
 }
 
+let rootRenderNode = null
 const performanceRender = (vdom, container) => {
-    const rootRenderNode = new RenderNode(vdom, container)
+    rootRenderNode = new RenderNode(vdom, container)
     let nextNode = rootRenderNode
     runTask(() => {
         if(nextNode){
@@ -40,15 +41,14 @@ const performanceRender = (vdom, container) => {
 }
 
 function initRenderNodeEl(renderNode) {
-    if(renderNode.el){
+    if(renderNode.dom){
         return 
      }
-    const { vdom: { type }, container } = renderNode
-    const el = type === ELEMENT_TYPE_ENUM.TEXT 
+    const { vdom: { type } } = renderNode
+    const dom = type === ELEMENT_TYPE_ENUM.TEXT 
         ? document.createTextNode('')
         : document.createElement(type)
-    renderNode.el = el
-    container.append(el)
+    renderNode.dom = dom
 }
 
 function processRenderNodeProp(renderNode){
@@ -57,7 +57,7 @@ function processRenderNodeProp(renderNode){
         if(key === 'children'){
             return
         }
-        renderNode.el[key] = val
+        renderNode.dom[key] = val
     })
 }
 
@@ -66,7 +66,7 @@ function initChildrenNode(renderNode){
     const children = []
     let preChildRenderNode
     props.children.forEach(child => {
-        const newRenderNode = new RenderNode(child, renderNode.el)
+        const newRenderNode = new RenderNode(child, renderNode.dom)
         newRenderNode.parent = renderNode
 
         if(preChildRenderNode){
@@ -83,6 +83,16 @@ function getNextRenderNode(renderNode){
     return renderNode.children?.[0] ?? renderNode.sibling ?? renderNode.parent.sibling
 }
 
+function commitDomMount(){
+    let nextNextRenderNode = rootRenderNode
+    while(nextNextRenderNode){
+        const { dom, container } = nextNextRenderNode
+        container.append(dom)
+        nextNextRenderNode = getNextRenderNode(nextNextRenderNode)
+    }
+    rootRenderNode = null
+}
+
 const performanceRenderUnite = (renderNode) => {
     // 1. create
     initRenderNodeEl(renderNode)
@@ -94,7 +104,14 @@ const performanceRenderUnite = (renderNode) => {
     initChildrenNode(renderNode)
 
     // 4. 返回要执行的下一个任务
-    return getNextRenderNode(renderNode)
+    const nextNextRenderNode = getNextRenderNode(renderNode)
+
+    // 5. 统一执行dom的挂载
+    if(!nextNextRenderNode){
+        commitDomMount()
+    }
+
+    return nextNextRenderNode
 }
 
 const React = {

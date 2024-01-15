@@ -1,13 +1,13 @@
 export class RenderNode{
     container
     vdom
+    dom
     parent
     sibling
     children
-    el
-    constructor(vdom, container, el){
+    constructor(vdom, container, dom){
         this.vdom = vdom
         this.container = container
-        this.el = el
+        this.dom = dom
     }
 }
