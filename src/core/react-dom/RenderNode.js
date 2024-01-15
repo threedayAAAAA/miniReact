@@ -1,13 +1,11 @@
-export class RenderNode{
-    container
+export class RenderNode {
     vdom
     dom
     parent
     sibling
     children
-    constructor(vdom, container, dom){
+    constructor(vdom, dom){
         this.vdom = vdom
-        this.container = container
         this.dom = dom
     }
 }

@@ -5,7 +5,7 @@ const ELEMENT_TYPE_ENUM = {
     TEXT: 'TEXT'
 }
 
-const createTextElement = (text) => {
+function createTextElement(text) {
     return {
         type: ELEMENT_TYPE_ENUM.TEXT,
         props: {
@@ -15,23 +15,26 @@ const createTextElement = (text) => {
     }
 }
 
-const createElement = (type, props, ...children) => {
+function createElement(type, props, ...children) {
     return {
         type,
         props: {
-            ...props,
-            children: children.map(child => {
-                return typeof child === 'string' 
-                    ? createTextElement(child)
-                    : child
-            })
+                ...props,
+                children: children.map(child => {
+                    return typeof child === 'string' || typeof child === 'number' 
+                        ? createTextElement(child)
+                        : isFunctionComponent(child) 
+                            ? child.type(child.props)
+                            : child
+                })
         }
-     }
+    }
 }
 
 let rootRenderNode = null
-const performanceRender = (vdom, container) => {
-    rootRenderNode = new RenderNode(vdom, container)
+function performanceRender(vdom, container) {
+    rootRenderNode = new RenderNode(vdom)
+    rootRenderNode.parent = new RenderNode({}, container)
     let nextNode = rootRenderNode
     runTask(() => {
         if(nextNode){
@@ -40,20 +43,26 @@ const performanceRender = (vdom, container) => {
     })
 }
 
+function isFunctionComponent(vdom) {
+    return typeof vdom.type === 'function' 
+}
+
 function initRenderNodeEl(renderNode) {
-    if(renderNode.dom){
+    const { vdom, dom } = renderNode
+    if(isFunctionComponent(vdom) || dom){
         return 
-     }
-    const { vdom: { type } } = renderNode
-    const dom = type === ELEMENT_TYPE_ENUM.TEXT 
+    }
+    const res = vdom.type === ELEMENT_TYPE_ENUM.TEXT 
         ? document.createTextNode('')
-        : document.createElement(type)
-    renderNode.dom = dom
+        : document.createElement(vdom.type)
+    renderNode.dom = res
 }
 
 function processRenderNodeProp(renderNode){
-    const { vdom: { props } } = renderNode
-    Object.entries(props).forEach(([key, val]) => {
+    if(isFunctionComponent(renderNode.vdom)){
+        return
+    }
+    Object.entries(renderNode.vdom.props).forEach(([key, val]) => {
         if(key === 'children'){
             return
         }
@@ -62,11 +71,13 @@ function processRenderNodeProp(renderNode){
 }
 
 function initChildrenNode(renderNode){
-    const { vdom: { props } } = renderNode
-    const children = []
+    const newChildren = []
+    const children = isFunctionComponent(renderNode.vdom) 
+        ? [renderNode.vdom.type()]
+        : renderNode.vdom.props.children
     let preChildRenderNode
-    props.children.forEach(child => {
-        const newRenderNode = new RenderNode(child, renderNode.dom)
+    children?.forEach(child => {
+        const newRenderNode = new RenderNode(child)
         newRenderNode.parent = renderNode
 
         if(preChildRenderNode){
@@ -74,9 +85,9 @@ function initChildrenNode(renderNode){
         }
         preChildRenderNode = newRenderNode
 
-        children.push(newRenderNode)
+        newChildren.push(newRenderNode)
     })
-    renderNode.children = children
+    renderNode.children = newChildren
 }
 
 function getNextRenderNode(renderNode){
@@ -84,16 +95,22 @@ function getNextRenderNode(renderNode){
 }
 
 function commitDomMount(){
-    let nextNextRenderNode = rootRenderNode
-    while(nextNextRenderNode){
-        const { dom, container } = nextNextRenderNode
-        container.append(dom)
-        nextNextRenderNode = getNextRenderNode(nextNextRenderNode)
+    let curRenderNode = rootRenderNode
+    while(curRenderNode){
+        const { dom } = curRenderNode
+        if(dom){
+            let parentNode = curRenderNode.parent
+            while(!parentNode?.dom){
+                parentNode = parentNode.parent
+            }
+            parentNode?.dom?.append(dom)
+        }
+        curRenderNode = getNextRenderNode(curRenderNode)
     }
     rootRenderNode = null
 }
 
-const performanceRenderUnite = (renderNode) => {
+function performanceRenderUnite(renderNode) {
     // 1. create
     initRenderNodeEl(renderNode)
 
