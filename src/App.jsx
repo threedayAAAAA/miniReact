@@ -1,8 +1,10 @@
 import React from './core/react-dom/React.js'
 
+let count = 10
 function App() {
-    const handler = () => {
-        console.log('handler')
+    const onAdd = () => {
+        count++
+        React.update()
     }
     return (
         <div>
@@ -11,9 +13,9 @@ function App() {
             <div>
                 content
                 <h2>h2 content</h2>
-                <button onClick={handler}>click</button>
-                <Count count={10}></Count>
-                <Count count={20}></Count>
+                <Count count={count}></Count>
+                <Count count={count * 2}></Count>
+                <button onClick={onAdd}>+1</button>
             </div>
         </div>
     )    

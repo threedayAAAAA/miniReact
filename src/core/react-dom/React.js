@@ -3,14 +3,21 @@ import { RenderNode, getNextRenderNode } from './RenderNode.js'
 import { createElement } from './createDom.js'
 import { updateComponent } from './component.js'
 
+function createRootRenderNode(vdom, container){
+    const res = new RenderNode(vdom)
+    res.parent = new RenderNode({}, container)
+    return res
+}
+
 let rootRenderNode = null
+let nextRenderNode = null
+let preRootRenderNode = null
 function render(vdom, container) {
-    rootRenderNode = new RenderNode(vdom)
-    rootRenderNode.parent = new RenderNode({}, container)
-    let nextNode = rootRenderNode
+    rootRenderNode = createRootRenderNode(vdom, container)
+    nextRenderNode = rootRenderNode
     runTask(() => {
-        if(nextNode){
-            nextNode = performanceRenderUnite(nextNode)
+        if(nextRenderNode){
+            nextRenderNode = performanceRenderUnite(nextRenderNode)
         }
     })
 }
@@ -31,10 +38,16 @@ function performanceRenderUnite(renderNode) {
 }
 
 function commitDomMount(){
-    let curRenderNode = rootRenderNode
+    commitWork(rootRenderNode)
+    preRootRenderNode = rootRenderNode
+    rootRenderNode = null
+}
+
+function commitWork(renderNode){
+    let curRenderNode = renderNode
     while(curRenderNode){
-        const { dom } = curRenderNode
-        if(dom){
+        const { dom, effectTag } = curRenderNode
+        if(dom && effectTag === 'placement'){
             let parentNode = curRenderNode.parent
             while(!parentNode?.dom){
                 parentNode = parentNode.parent
@@ -43,11 +56,17 @@ function commitDomMount(){
         }
         curRenderNode = getNextRenderNode(curRenderNode)
     }
-    rootRenderNode = null
+}
+
+function update(){
+    rootRenderNode = createRootRenderNode(preRootRenderNode.vdom, preRootRenderNode.parent.dom)
+    rootRenderNode.alternate = preRootRenderNode
+    nextRenderNode = rootRenderNode
 }
 
 const React = {
     render,
+    update,
     createElement
 }
 export default React

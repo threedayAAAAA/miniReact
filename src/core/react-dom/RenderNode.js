@@ -5,6 +5,7 @@ export class RenderNode {
     sibling
     children
     alternate
+    effectTag
     constructor(vdom, dom){
         this.vdom = vdom
         this.dom = dom

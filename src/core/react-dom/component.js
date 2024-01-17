@@ -1,6 +1,6 @@
 import { createDom } from './createDom.js'
 import { updateProps } from './props.js'
-import { RenderNode } from './RenderNode.js'
+import { RenderNode, getNextRenderNode } from './RenderNode.js'
 
 export function updateComponent(renderNode){
     // 1. create
@@ -33,14 +33,28 @@ function updateHostComponent(renderNode){
     initChild(renderNode)
 }
 
+function isSameType(newVdmo, oldVdom){
+    return 
+}
 
 function initChild(renderNode){
-    const { vdom: { props } } = renderNode
+    const { alternate, vdom: { props } } = renderNode
     const newChildren = []
     let preChildRenderNode
+    let curAlternate = alternate?.children?.[0]
     props.children?.forEach(child => {
         const newRenderNode = new RenderNode(child)
         newRenderNode.parent = renderNode
+
+        const isSameType = curAlternate?.vdom.type === child.type
+        if(curAlternate && isSameType){
+            newRenderNode.effectTag = 'update'
+            newRenderNode.dom = curAlternate.dom
+        } else {
+            newRenderNode.effectTag = 'placement'
+        }
+        newRenderNode.alternate = curAlternate
+        curAlternate = curAlternate?.sibling
 
         if(preChildRenderNode){
             preChildRenderNode.sibling = newRenderNode
