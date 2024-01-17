@@ -1,38 +1,10 @@
 import { runTask } from './WorkLoop.js'
-import { RenderNode } from './RenderNode.js'
-
-const ELEMENT_TYPE_ENUM = {
-    TEXT: 'TEXT'
-}
-
-function createTextElement(text) {
-    return {
-        type: ELEMENT_TYPE_ENUM.TEXT,
-        props: {
-            nodeValue: text,
-            children: []
-        }
-    }
-}
-
-function createElement(type, props, ...children) {
-    return {
-        type,
-        props: {
-                ...props,
-                children: children.map(child => {
-                    return typeof child === 'string' || typeof child === 'number' 
-                        ? createTextElement(child)
-                        : isFunctionComponent(child) 
-                            ? child.type(child.props)
-                            : child
-                })
-        }
-    }
-}
+import { RenderNode, getNextRenderNode } from './RenderNode.js'
+import { createElement } from './createDom.js'
+import { updateComponent } from './component.js'
 
 let rootRenderNode = null
-function performanceRender(vdom, container) {
+function render(vdom, container) {
     rootRenderNode = new RenderNode(vdom)
     rootRenderNode.parent = new RenderNode({}, container)
     let nextNode = rootRenderNode
@@ -43,55 +15,19 @@ function performanceRender(vdom, container) {
     })
 }
 
-function isFunctionComponent(vdom) {
-    return typeof vdom.type === 'function' 
-}
+function performanceRenderUnite(renderNode) {
+    // 更新组件
+    updateComponent(renderNode)
 
-function initRenderNodeEl(renderNode) {
-    const { vdom, dom } = renderNode
-    if(isFunctionComponent(vdom) || dom){
-        return 
+    // 返回要执行的下一个任务
+    const nextNextRenderNode = getNextRenderNode(renderNode)
+
+    // 统一执行dom的挂载
+    if(!nextNextRenderNode){
+        commitDomMount()
     }
-    const res = vdom.type === ELEMENT_TYPE_ENUM.TEXT 
-        ? document.createTextNode('')
-        : document.createElement(vdom.type)
-    renderNode.dom = res
-}
 
-function processRenderNodeProp(renderNode){
-    if(isFunctionComponent(renderNode.vdom)){
-        return
-    }
-    Object.entries(renderNode.vdom.props).forEach(([key, val]) => {
-        if(key === 'children'){
-            return
-        }
-        renderNode.dom[key] = val
-    })
-}
-
-function initChildrenNode(renderNode){
-    const newChildren = []
-    const children = isFunctionComponent(renderNode.vdom) 
-        ? [renderNode.vdom.type()]
-        : renderNode.vdom.props.children
-    let preChildRenderNode
-    children?.forEach(child => {
-        const newRenderNode = new RenderNode(child)
-        newRenderNode.parent = renderNode
-
-        if(preChildRenderNode){
-            preChildRenderNode.sibling = newRenderNode
-        }
-        preChildRenderNode = newRenderNode
-
-        newChildren.push(newRenderNode)
-    })
-    renderNode.children = newChildren
-}
-
-function getNextRenderNode(renderNode){
-    return renderNode.children?.[0] ?? renderNode.sibling ?? renderNode.parent.sibling
+    return nextNextRenderNode
 }
 
 function commitDomMount(){
@@ -110,30 +46,8 @@ function commitDomMount(){
     rootRenderNode = null
 }
 
-function performanceRenderUnite(renderNode) {
-    // 1. create
-    initRenderNodeEl(renderNode)
-
-    // 2. props
-    processRenderNodeProp(renderNode)
-
-    // 3. 根据children的指针,生成渲染任务的链表结构
-    initChildrenNode(renderNode)
-
-    // 4. 返回要执行的下一个任务
-    const nextNextRenderNode = getNextRenderNode(renderNode)
-
-    // 5. 统一执行dom的挂载
-    if(!nextNextRenderNode){
-        commitDomMount()
-    }
-
-    return nextNextRenderNode
-}
-
 const React = {
-    render: performanceRender,
+    render,
     createElement
 }
-
 export default React
