@@ -29,7 +29,7 @@ export function createElement(type, props, ...children) {
 
 export function createDom(renderNode) {
     const { vdom, dom, alternate } = renderNode
-    if(dom){
+    if(!vdom || dom){
         return 
     }
     const res = vdom.type === alternate?.vdom.type
