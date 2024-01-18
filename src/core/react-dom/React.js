@@ -11,8 +11,8 @@ function createRootRenderNode(vdom, container){
 
 let rootRenderNode = null
 let nextRenderNode = null
-let preRootRenderNode = null
 export const __GLOBAL_OBJ = {
+    wipRootRender: null,
     needDeleteRenderNodes: []
 }
 function render(vdom, container) {
@@ -43,7 +43,6 @@ function performanceRenderUnite(renderNode) {
 function commitDomMount(){
     deleteWork(__GLOBAL_OBJ.needDeleteRenderNodes)
     commitWork(rootRenderNode)
-    preRootRenderNode = rootRenderNode
     rootRenderNode = null
     __GLOBAL_OBJ.needDeleteRenderNodes = []
 }
@@ -51,13 +50,18 @@ function commitDomMount(){
 function commitWork(renderNode){
     let curRenderNode = renderNode
     while(curRenderNode){
-        const { dom } = curRenderNode
+        const { dom, effectTag } = curRenderNode
         if(dom){
             let parentNode = curRenderNode.parent
             while(!parentNode?.dom){
                 parentNode = parentNode.parent
             }
-            parentNode?.dom?.append(dom)
+            
+            if(effectTag === 'placement'){
+                parentNode?.dom?.append(dom)
+            } else if(!parentNode?.dom?.hasChildNodes(dom)){
+                parentNode?.dom?.append(dom)
+            }
         }
         curRenderNode = getNextRenderNode(curRenderNode)
     }
@@ -80,9 +84,12 @@ function deleteWork(needDeleteRenderNodes){
 }
 
 function update(){
-    rootRenderNode = createRootRenderNode(preRootRenderNode.vdom, preRootRenderNode.parent.dom)
-    rootRenderNode.alternate = preRootRenderNode
-    nextRenderNode = rootRenderNode
+    let currentRootNode = __GLOBAL_OBJ.wipRootRender
+    return () => {
+        rootRenderNode = createRootRenderNode(currentRootNode.vdom, currentRootNode.parent.dom)
+        rootRenderNode.alternate = currentRootNode
+        nextRenderNode = rootRenderNode
+    }
 }
 
 const React = {

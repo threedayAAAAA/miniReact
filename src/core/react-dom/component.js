@@ -19,6 +19,8 @@ function isFunctionComponent(vdom) {
 }
 
 function updateFunctionComponent(renderNode){
+    __GLOBAL_OBJ.wipRootRender = renderNode
+
     renderNode.vdom.props.children = [renderNode.vdom.type(renderNode.vdom.props)]
     initChild(renderNode)
 }
