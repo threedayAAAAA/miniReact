@@ -32,7 +32,7 @@ export function createDom(renderNode) {
     if(!vdom || dom){
         return 
     }
-    const res = vdom.type === alternate?.vdom.type
+    const res = vdom.type === alternate?.vdom?.type
         ? alternate.dom
         : vdom.type === ELEMENT_TYPE_ENUM.TEXT 
             ? document.createTextNode('')

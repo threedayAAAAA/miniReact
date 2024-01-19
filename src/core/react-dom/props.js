@@ -2,7 +2,7 @@ export function updateProps(renderNode){
     const { dom, vdom: { props }, alternate } = renderNode
 
     // 移除旧的存在,新的不存在
-    alternate && Object.entries(alternate.vdom.props).forEach(([key, val]) => {
+    alternate?.dom && Object.entries(alternate.vdom.props).forEach(([key, val]) => {
         if(key !== 'children'){
             if(!key in props){
                 dom.removeAttribute(key)

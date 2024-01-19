@@ -7,21 +7,27 @@ let showFalse = false
 let showFunction = false
 
 function App(){
-    const update = React.update()
+    const [count, setCount] = React.useState(10)
+    const [bar, setBar] = React.useState('bar')
     const addAppCount = () => {
-        count++
-        update()
+        setCount(count => count + 1)
     }
-    console.log('App update')
+    const addBar = () => {
+        setBar(bar => bar + 'bar')
+    }
     return <div>
         <p>app count: { count }</p>
-    <div>
-        <button onClick={addAppCount}>appCount++</button>
+        <p>app bar: { bar }</p>
+        <div>
+            <button onClick={addAppCount}>appCount</button>
+            <div>
+                <button onClick={addBar}>addBar</button>
+            </div>
+        </div>
+        <Count />
+        <Count2 />
+        <App2 />
     </div>
-    <Count />
-    <Count2 />
-    <App2 />
-</div>
 }
 
 let count1 = 0
@@ -58,10 +64,6 @@ function Count2(){
 
 function App2() {
     const update = React.update()
-    const onAdd = () => {
-        count++
-        update()
-    }
     const showBarHandler = () => {
         showBar = !showBar
         update()
@@ -90,8 +92,8 @@ function App2() {
         showFunction = !showFunction
         update()
     }
-    const Foo = () => <p>foo</p>
-    const Bar = () => <div>bar</div>
+    const Foo = () => <p>Foo</p>
+    const Bar = () => <div>Bar</div>
     return (
         <div>
             hi
@@ -99,10 +101,6 @@ function App2() {
             <div>
                 content
                 <h2>h2 content</h2>
-                <Count count={count}></Count>
-                <Count count={count * 2}></Count>
-                <button onClick={onAdd}>+1</button>
-
                 <div>
                     <button onClick={showBarHandler}>showBar</button>
                     { showBar ? bar : foo }

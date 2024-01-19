@@ -92,9 +92,29 @@ function update(){
     }
 }
 
+const useState = (initial) => {
+    const currentFunctionNode = __GLOBAL_OBJ.wipRootRender
+    const oldNode = currentFunctionNode?.alternate
+    const stateHook = {
+        state: oldNode?.stateHook.state ?? initial
+    }
+    currentFunctionNode.stateHook = stateHook
+    
+    const setState = (action) => {
+        stateHook.state = action(stateHook.state)
+
+        const nextRenderFunctionNode = createRootRenderNode(currentFunctionNode.vdom)
+        // nextRenderFunctionNode.alternate = oldNode
+        nextRenderFunctionNode.alternate = currentFunctionNode
+        nextRenderNode = nextRenderFunctionNode
+    }
+    return [stateHook.state, setState]
+}
+
 const React = {
     render,
     update,
-    createElement
+    createElement,
+    useState
 }
 export default React

@@ -40,33 +40,37 @@ function initChild(renderNode){
     const { alternate, vdom: { props } } = renderNode
     const newChildren = []
     let preChildRenderNode
-    let curAlternate = alternate?.children?.[0]
-    props.children?.forEach(child => {
+    // let curAlternate = alternate?.children?.[0]
+    props.children?.forEach((child, index) => {
+        let curAlternate = alternate?.children?.[index]
         const newRenderNode = new RenderNode(child)
         newRenderNode.parent = renderNode
 
-        const isSameType = curAlternate?.vdom.type === child?.type
-        if(curAlternate && isSameType){
+        const isSameType = curAlternate?.vdom && curAlternate.vdom?.type === child?.type
+        if(isSameType){
             newRenderNode.effectTag = 'update'
             newRenderNode.dom = curAlternate.dom
         } else {
-            newRenderNode.effectTag = 'placement'
+            if(child){
+                newRenderNode.effectTag = 'placement'
+            }
             if(curAlternate){
                 __GLOBAL_OBJ.needDeleteRenderNodes.push(curAlternate)
             }
         }
         newRenderNode.alternate = curAlternate
         curAlternate = curAlternate?.sibling
-        if(!child){
-            return
+        if(child){
+            if(preChildRenderNode){
+                preChildRenderNode.sibling = newRenderNode
+            }
+            preChildRenderNode = newRenderNode
         }
-
-        if(preChildRenderNode){
-            preChildRenderNode.sibling = newRenderNode
-        }
-        preChildRenderNode = newRenderNode
 
         newChildren.push(newRenderNode)
     })
     renderNode.children = newChildren
+    if(props.children.includes(false)){
+        console.log(__GLOBAL_OBJ.needDeleteRenderNodes)
+    }
 }
