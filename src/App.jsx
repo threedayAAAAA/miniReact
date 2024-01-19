@@ -10,10 +10,10 @@ function App(){
     const [count, setCount] = React.useState(10)
     const [bar, setBar] = React.useState('bar')
     const addAppCount = () => {
-        setCount(count => count + 1)
+        setCount(count + 1)
     }
     const addBar = () => {
-        setBar(bar => bar + 'bar')
+        setBar(bar + 'bar')
     }
     return <div>
         <p>app count: { count }</p>

@@ -94,23 +94,27 @@ function update(){
     }
 }
 
+function isFunction(data){
+    return typeof data === 'function'
+}
 
 const useState = (initial) => {
     const currentFunctionNode = __GLOBAL_OBJ.wipRootRender
-    const oldNode = currentFunctionNode?.alternate
-    // stateHooks[stateHookIndex]
-    // const stateHook = {
-    //     state: oldNode?.stateHook.state ?? initial
-    // }
-    const stateHook = oldNode?.stateHooks?.[__GLOBAL_OBJ.stateHookIndex] ?? {
-        state: initial
+    const oldStateHook = currentFunctionNode?.alternate?.stateHooks?.[__GLOBAL_OBJ.stateHookIndex]
+    const stateHook = {
+        state: oldStateHook?.state ?? initial,
+        queue: oldStateHook?.queue ?? []
     }
     __GLOBAL_OBJ.stateHookIndex++
     __GLOBAL_OBJ.stateHooks.push(stateHook)
     currentFunctionNode.stateHooks = __GLOBAL_OBJ.stateHooks
+
+    stateHook.queue.forEach(action => {
+        stateHook.state = isFunction(action) ? action(stateHook.state) : action
+    })
     
     const setState = (action) => {
-        stateHook.state = action(stateHook.state)
+        stateHook.queue.push(isFunction(action) ? action : () => action)
 
         const nextRenderFunctionNode = createRootRenderNode(currentFunctionNode.vdom)
         nextRenderFunctionNode.alternate = currentFunctionNode
