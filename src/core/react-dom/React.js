@@ -13,7 +13,9 @@ let rootRenderNode = null
 let nextRenderNode = null
 export const __GLOBAL_OBJ = {
     wipRootRender: null,
-    needDeleteRenderNodes: []
+    needDeleteRenderNodes: [],
+    stateHooks: [],
+    stateHookIndex: 0
 }
 function render(vdom, container) {
     rootRenderNode = createRootRenderNode(vdom, container)
@@ -92,19 +94,25 @@ function update(){
     }
 }
 
+
 const useState = (initial) => {
     const currentFunctionNode = __GLOBAL_OBJ.wipRootRender
     const oldNode = currentFunctionNode?.alternate
-    const stateHook = {
-        state: oldNode?.stateHook.state ?? initial
+    // stateHooks[stateHookIndex]
+    // const stateHook = {
+    //     state: oldNode?.stateHook.state ?? initial
+    // }
+    const stateHook = oldNode?.stateHooks?.[__GLOBAL_OBJ.stateHookIndex] ?? {
+        state: initial
     }
-    currentFunctionNode.stateHook = stateHook
+    __GLOBAL_OBJ.stateHookIndex++
+    __GLOBAL_OBJ.stateHooks.push(stateHook)
+    currentFunctionNode.stateHooks = __GLOBAL_OBJ.stateHooks
     
     const setState = (action) => {
         stateHook.state = action(stateHook.state)
 
         const nextRenderFunctionNode = createRootRenderNode(currentFunctionNode.vdom)
-        // nextRenderFunctionNode.alternate = oldNode
         nextRenderFunctionNode.alternate = currentFunctionNode
         nextRenderNode = nextRenderFunctionNode
     }

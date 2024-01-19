@@ -20,6 +20,8 @@ function isFunctionComponent(vdom) {
 
 function updateFunctionComponent(renderNode){
     __GLOBAL_OBJ.wipRootRender = renderNode
+    __GLOBAL_OBJ.stateHooks = []
+    __GLOBAL_OBJ.stateHookIndex = 0
 
     renderNode.vdom.props.children = [renderNode.vdom.type(renderNode.vdom.props)]
     initChild(renderNode)
@@ -70,7 +72,4 @@ function initChild(renderNode){
         newChildren.push(newRenderNode)
     })
     renderNode.children = newChildren
-    if(props.children.includes(false)){
-        console.log(__GLOBAL_OBJ.needDeleteRenderNodes)
-    }
 }
