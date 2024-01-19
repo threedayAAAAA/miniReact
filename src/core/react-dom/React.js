@@ -114,6 +114,10 @@ const useState = (initial) => {
     })
     
     const setState = (action) => {
+        const eagerState = isFunction(action) ? action(stateHook.state) : action
+        if(eagerState === stateHook.state){
+            return
+        }
         stateHook.queue.push(isFunction(action) ? action : () => action)
 
         const nextRenderFunctionNode = createRootRenderNode(currentFunctionNode.vdom)

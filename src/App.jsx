@@ -13,8 +13,9 @@ function App(){
         setCount(count + 1)
     }
     const addBar = () => {
-        setBar(bar + 'bar')
+        setBar('bar')
     }
+    console.log('update APP')
     return <div>
         <p>app count: { count }</p>
         <p>app bar: { bar }</p>
