@@ -90,7 +90,6 @@ function deleteWork(needDeleteRenderNodes){
 function commitEffect(renderNode){
     let curRenderNode = renderNode
     while(curRenderNode){
-        // console.log(curRenderNode)
         const { effectHooks, alternate } = curRenderNode ?? {}
         curRenderNode = getNextRenderNode(curRenderNode)
         if(!effectHooks){
@@ -100,16 +99,20 @@ function commitEffect(renderNode){
         if(alternate){
             effectHooks.forEach((effectHook, index) => {
                 const { deps } = effectHook
-                const { deps: oldDeps = [] } = alternate.effectHooks?.[index]
+                const oldEffectHook = alternate.effectHooks?.[index]
+                const { deps: oldDeps = [], cleanup: oldCleanup } = oldEffectHook
                 deps.forEach((dep, i) => {
                     if(dep !== oldDeps[i]){
-                        effectHook?.callBack()
+                        oldCleanup?.()
+                        effectHook.cleanup = effectHook.callBack()
                     }
                 })
             })
         } else {
         // init
-            effectHooks.forEach(effectHook => effectHook.callBack())
+            effectHooks.forEach(effectHook => {
+                effectHook.cleanup = effectHook.callBack()
+            })
         }
     }
 }
@@ -159,7 +162,7 @@ const useState = (initial) => {
 const useEffect = (callBack, deps) => {
     const effectHook = {
         callBack,
-        deps
+        deps,
     }
     __GLOBAL_OBJ.effectHooks.push(effectHook)
     __GLOBAL_OBJ.wipRootRender.effectHooks = __GLOBAL_OBJ.effectHooks

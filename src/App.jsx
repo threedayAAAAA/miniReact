@@ -40,12 +40,21 @@ function Effect(){
     const setBarEqualVal = () => setBar(bar)
     React.useEffect(() => {
         console.log('init')
+        return () => {
+            console.err('cleanup not deps')
+        }
     }, [])
     React.useEffect(() => {
         console.log('update: count')
+        return () => {
+            console.log('cleanup update: count')
+        }
     }, [count])
     React.useEffect(() => {
         console.log('update: count or bar')
+        return () => {
+            console.log('cleanup update: count or bar')
+        }
     }, [count, bar])
     return <div>
         <p>count: { count }</p>
