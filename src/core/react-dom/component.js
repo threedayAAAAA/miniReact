@@ -22,7 +22,8 @@ function updateFunctionComponent(renderNode){
     __GLOBAL_OBJ.wipRootRender = renderNode
     __GLOBAL_OBJ.stateHooks = []
     __GLOBAL_OBJ.stateHookIndex = 0
-
+    __GLOBAL_OBJ.effectHooks = []
+    
     renderNode.vdom.props.children = [renderNode.vdom.type(renderNode.vdom.props)]
     initChild(renderNode)
 }

@@ -34,16 +34,25 @@ function App(){
 
 function Effect(){
     const [count, setCount] = React.useState(10)
+    const [bar, setBar] = React.useState('bar')
     const addCount = () => setCount(count + 1)
-    // React.useEffect(() => {
-    //     console.log('init')
-    // }, [])
+    const addBar = () => setBar(bar + 'bar')
+    const setBarEqualVal = () => setBar(bar)
     React.useEffect(() => {
-        console.log('update')
+        console.log('init')
+    }, [])
+    React.useEffect(() => {
+        console.log('update: count')
     }, [count])
+    React.useEffect(() => {
+        console.log('update: count or bar')
+    }, [count, bar])
     return <div>
         <p>count: { count }</p>
-        <button onClick={addCount}>addCount</button>
+        <p>bar: { bar }</p>
+        <div><button onClick={addCount}>addCount</button></div>
+        <div><button onClick={addBar}>addBar</button></div>
+        <div><button onClick={setBarEqualVal}>setBarEqualVal</button></div>
     </div>
 }
 

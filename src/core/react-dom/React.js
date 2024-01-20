@@ -15,7 +15,8 @@ export const __GLOBAL_OBJ = {
     wipRootRender: null,
     needDeleteRenderNodes: [],
     stateHooks: [],
-    stateHookIndex: 0
+    stateHookIndex: 0,
+    effectHooks: []
 }
 function render(vdom, container) {
     rootRenderNode = createRootRenderNode(vdom, container)
@@ -89,23 +90,26 @@ function deleteWork(needDeleteRenderNodes){
 function commitEffect(renderNode){
     let curRenderNode = renderNode
     while(curRenderNode){
-        const { effectHook, alternate } = curRenderNode ?? {}
+        // console.log(curRenderNode)
+        const { effectHooks, alternate } = curRenderNode ?? {}
         curRenderNode = getNextRenderNode(curRenderNode)
-        if(!effectHook){
-            return
+        if(!effectHooks){
+            continue
         }
         // update
         if(alternate){
-            const { deps } = effectHook
-            const { deps: oldDeps } = alternate.effectHook
-            deps.forEach((dep, index) => {
-                if(dep !== oldDeps[index]){
-                    effectHook?.callBack()
-                }
+            effectHooks.forEach((effectHook, index) => {
+                const { deps } = effectHook
+                const { deps: oldDeps = [] } = alternate.effectHooks?.[index]
+                deps.forEach((dep, i) => {
+                    if(dep !== oldDeps[i]){
+                        effectHook?.callBack()
+                    }
+                })
             })
         } else {
         // init
-            effectHook?.callBack()
+            effectHooks.forEach(effectHook => effectHook.callBack())
         }
     }
 }
@@ -157,7 +161,8 @@ const useEffect = (callBack, deps) => {
         callBack,
         deps
     }
-    __GLOBAL_OBJ.wipRootRender.effectHook = effectHook
+    __GLOBAL_OBJ.effectHooks.push(effectHook)
+    __GLOBAL_OBJ.wipRootRender.effectHooks = __GLOBAL_OBJ.effectHooks
 }
 
 const React = {
