@@ -45,6 +45,7 @@ function performanceRenderUnite(renderNode) {
 function commitDomMount(){
     deleteWork(__GLOBAL_OBJ.needDeleteRenderNodes)
     commitWork(rootRenderNode)
+    commitEffect(rootRenderNode)
     rootRenderNode = null
     __GLOBAL_OBJ.needDeleteRenderNodes = []
 }
@@ -85,6 +86,30 @@ function deleteWork(needDeleteRenderNodes){
     })
 }
 
+function commitEffect(renderNode){
+    let curRenderNode = renderNode
+    while(curRenderNode){
+        const { effectHook, alternate } = curRenderNode ?? {}
+        curRenderNode = getNextRenderNode(curRenderNode)
+        if(!effectHook){
+            return
+        }
+        // update
+        if(alternate){
+            const { deps } = effectHook
+            const { deps: oldDeps } = alternate.effectHook
+            deps.forEach((dep, index) => {
+                if(dep !== oldDeps[index]){
+                    effectHook?.callBack()
+                }
+            })
+        } else {
+        // init
+            effectHook?.callBack()
+        }
+    }
+}
+
 function update(){
     let currentRootNode = __GLOBAL_OBJ.wipRootRender
     return () => {
@@ -120,17 +145,26 @@ const useState = (initial) => {
         }
         stateHook.queue.push(isFunction(action) ? action : () => action)
 
-        const nextRenderFunctionNode = createRootRenderNode(currentFunctionNode.vdom)
-        nextRenderFunctionNode.alternate = currentFunctionNode
-        nextRenderNode = nextRenderFunctionNode
+        rootRenderNode = createRootRenderNode(currentFunctionNode.vdom, currentFunctionNode.parent.dom)
+        rootRenderNode.alternate = currentFunctionNode
+        nextRenderNode = rootRenderNode
     }
     return [stateHook.state, setState]
+}
+
+const useEffect = (callBack, deps) => {
+    const effectHook = {
+        callBack,
+        deps
+    }
+    __GLOBAL_OBJ.wipRootRender.effectHook = effectHook
 }
 
 const React = {
     render,
     update,
     createElement,
-    useState
+    useState,
+    useEffect
 }
 export default React

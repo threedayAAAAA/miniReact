@@ -7,17 +7,18 @@ let showFalse = false
 let showFunction = false
 
 function App(){
-    const [count, setCount] = React.useState(10)
-    const [bar, setBar] = React.useState('bar')
-    const addAppCount = () => {
-        setCount(count + 1)
-    }
-    const addBar = () => {
-        setBar('bar')
-    }
-    console.log('update APP')
+    // const [count, setCount] = React.useState(10)
+    // const [bar, setBar] = React.useState('bar')
+    // const addAppCount = () => {
+    //     setCount(count + 1)
+    // }
+    // const addBar = () => {
+    //     setBar('bar')
+    // }
+    // console.log('update APP')
     return <div>
-        <p>app count: { count }</p>
+        <Effect />
+        {/* <p>app count: { count }</p>
         <p>app bar: { bar }</p>
         <div>
             <button onClick={addAppCount}>appCount</button>
@@ -27,7 +28,22 @@ function App(){
         </div>
         <Count />
         <Count2 />
-        <App2 />
+        <App2 /> */}
+    </div>
+}
+
+function Effect(){
+    const [count, setCount] = React.useState(10)
+    const addCount = () => setCount(count + 1)
+    // React.useEffect(() => {
+    //     console.log('init')
+    // }, [])
+    React.useEffect(() => {
+        console.log('update')
+    }, [count])
+    return <div>
+        <p>count: { count }</p>
+        <button onClick={addCount}>addCount</button>
     </div>
 }
 
