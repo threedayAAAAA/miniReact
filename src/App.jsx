@@ -7,28 +7,26 @@ let showFalse = false
 let showFunction = false
 
 function App(){
-    // const [count, setCount] = React.useState(10)
-    // const [bar, setBar] = React.useState('bar')
-    // const addAppCount = () => {
-    //     setCount(count + 1)
-    // }
-    // const addBar = () => {
-    //     setBar('bar')
-    // }
-    // console.log('update APP')
+    const [count, setCount] = React.useState(10)
+    const addAppCount = () => {
+        setCount(count + 1)
+    }
+    console.log('update APP')
     return <div>
-        <Effect />
-        {/* <p>app count: { count }</p>
-        <p>app bar: { bar }</p>
-        <div>
-            <button onClick={addAppCount}>appCount</button>
-            <div>
-                <button onClick={addBar}>addBar</button>
-            </div>
-        </div>
+        <hr />
+        <h1>01.支持条件渲染组件,动态渲染组件</h1>
+        <UpdateChildren />
+
+        <hr />
+        <h1>02.使用useState状态变化时,只更新对应组件而不是整体重新渲染</h1>
+        <p>app count: { count }</p>
+        <div><button onClick={addAppCount}>appCount++</button></div>
         <Count />
         <Count2 />
-        <App2 /> */}
+        
+        <hr />
+        <h1>03.支持useEffect</h1>
+        <Effect />
     </div>
 }
 
@@ -97,7 +95,7 @@ function Count2(){
     </div>
 }
 
-function App2() {
+function UpdateChildren() {
     const update = React.update()
     const showBarHandler = () => {
         showBar = !showBar
@@ -131,32 +129,26 @@ function App2() {
     const Bar = () => <div>Bar</div>
     return (
         <div>
-            hi
-            <h1>h1 content</h1>
             <div>
-                content
-                <h2>h2 content</h2>
-                <div>
-                    <button onClick={showBarHandler}>showBar</button>
-                    { showBar ? bar : foo }
-                </div>
+                <button onClick={showBarHandler}>showBar</button>
+                { showBar ? bar : foo }
+            </div>
 
-                <div>
-                    <button onClick={showFunctionHandler}>showFunction</button>
-                    { showFunction ? <Bar /> : <Foo /> }
-                </div>
+            <div>
+                <button onClick={showFunctionHandler}>切换函数组件渲染</button>
+                { showFunction ? <Bar /> : <Foo /> }
+            </div>
 
-                <div>
-                    <button onClick={showManyHandler}>showMany</button>
-                    { showMany ? manyNode : fewNode }
-                </div>
+            <div>
+                <button onClick={showManyHandler}>切换子组件变多或变少渲染</button>
+                { showMany ? manyNode : fewNode }
+            </div>
 
 
-                <div>
-                    <p>showFalse</p>
-                    { showFalse && falseNode }
-                    <button onClick={showFalseHandler}>showFalse</button>
-                </div>
+            <div>
+                <p>showFalse</p>
+                { showFalse && falseNode }
+                <button onClick={showFalseHandler}>使用false && 的语法动态切换</button>
             </div>
         </div>
     )    
